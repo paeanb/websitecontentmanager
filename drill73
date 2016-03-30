@@ -1,0 +1,136 @@
+#drill 72 creating a GUI to update website content
+
+from tkinter import *
+from tkinter import ttk
+import webbrowser
+import sqlite3
+import os
+import drill73_db
+
+#Python 3.5.1
+
+class retailSite:
+
+    def __init__(self, master):
+
+        master.title('Retail Website Content Manager')
+        master.resizable(False, False)
+        master.configure(background = '#F6CED8')
+        
+        #styling the widgets
+        self.style = ttk.Style()
+        self.style.configure('TFrame', background = '#F6CED8')
+        self.style.configure('TButton', background = '#F6CED8')
+        self.style.configure('TLabel', background = '#F6CED8', font = ('Arial', 11, 'bold'))
+        self.style.configure('Header.TLabel', background = '#F6CED8', font = ('Arial', 18, 'bold'))
+        
+        #frame constructor method
+        self.frame_header = ttk.Frame(master)
+        #pack method geometry manager
+        self.frame_header.pack()
+
+
+        self.logo = PhotoImage(file = 'shoe.png')
+        ttk.Label(self.frame_header, image = self.logo).grid(row = 0, column = 0, rowspan = 2, padx = 40)
+        ttk.Label(self.frame_header, text = "Retail Website Manager", style = 'Header.TLabel').grid(row = 0, column = 1, padx= 10)
+        ttk.Label(self.frame_header, text = "Update your website's content").grid(row = 1, column = 1, sticky = 'n')
+        
+        self.frame_content = ttk.Frame(master)
+        self.frame_content.pack()
+
+        ttk.Label(self.frame_content, text = 'Header:').grid(row = 0, column = 0, padx = 10, sticky = 'sw')
+        ttk.Label(self.frame_content, text = 'Body:').grid(row = 2, column = 0, padx = 10, sticky = 'sw')
+        
+      
+        self.entry_htmlH1 = ttk.Entry(self.frame_content, width = 100, font = ('Arial', 10))
+        
+        
+        self.text_htmlP = Text(self.frame_content, width = 100, height = 10, font = ('Ariel', 10))
+
+        self.entry_htmlH1.grid(row= 1, column = 0, columnspan= 4, padx = 10)
+        self.text_htmlP.grid(row = 3, column = 0, columnspan= 4, padx = 10)
+
+        ttk.Button(self.frame_content, text = 'Clear', command = self.clear).grid(row = 4, column = 0, pady= 10)
+        ttk.Button(self.frame_content, text = 'Save', command = self.save).grid(row = 4, column = 1, pady= 10)
+        ttk.Button(self.frame_content, text = 'Submit', command = self.submit).grid(row = 4, column = 2, pady= 10)
+        ttk.Button(self.frame_content, text = 'View Page', command = self.viewPage).grid(row = 4, column = 3, pady= 10)
+        
+
+
+        self.frame_load = ttk.Frame(master)
+        #pack method geometry manager
+        self.frame_load.pack()
+
+        
+        scroll = Scrollbar(self.frame_load, orient = VERTICAL)
+        self.lb = Listbox(self.frame_load, yscrollcommand=scroll.set, height = 6, width= 115)
+        scroll.config(command= self.lb.yview)
+        scroll.pack(side=RIGHT, fill=Y)
+        self.lb.pack(side=LEFT, fill=BOTH, expand=1)
+        
+
+        self.frame_button = ttk.Frame(master)
+        self.frame_button.pack()
+        ttk.Button(self.frame_button, text = 'Load Text', command = self.onClick).grid(pady = 10)
+
+        
+        for item in drill73_db.viewDBText():
+            self.lb.insert(END, item)
+
+
+    def onClick(self):
+        selection = self.lb.get(ACTIVE)
+        print (selection)
+        self.clear()
+        self.entry_htmlH1.insert(10, str(selection))
+        
+    def save(self):
+        self.h1Text = self.entry_htmlH1.get()
+        self.pText = self.text_htmlP.get(1.0, 'end')
+        drill73_db.newEntry(self.h1Text, self.pText)
+        messagebox.showinfo(title = "Success!", message = "Site Content Saved!")
+        self.clear()
+        for item in drill73_db.viewDBText():
+            self.lb.insert(END, item)
+                
+        
+    def submit(self):
+        self.h1Text = self.entry_htmlH1.get()
+        
+        self.pText = self.text_htmlP.get(1.0, 'end')
+        
+        self.createHtml()
+        self.clear()
+        messagebox.showinfo(title = "Success!", message = "Site Content Updated!")
+
+    def clear(self):
+        self.entry_htmlH1.delete(0, 'end')
+        self.text_htmlP.delete(1.0, 'end')
+
+    def createHtml(self):
+        self.html = open('index.html', 'w')
+        self.content = "<html> \n<body> \n <h1> \n" + self.h1Text + "\n </h1> \n <p> \n" \
+                       + self.pText + "\n </p> \n</body> \n</html>"
+        self.html.write(self.content)
+        self.html.close()
+
+    def viewPage(self):
+        self.new = 2
+        self.url = 'index.html'
+        webbrowser.open(self.url, new = self.new)
+
+
+
+    
+       
+
+
+        
+            
+def main():
+    root = Tk()
+    feedback = retailSite(root)
+    root.mainloop()
+    drill73_db.createTable()
+
+if __name__ == "__main__": main()
