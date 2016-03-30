@@ -1,0 +1,39 @@
+import sqlite3
+
+conn = sqlite3.connect('retailSite.db')
+
+def createTable():
+    conn.execute("CREATE TABLE if not exists WEBSITE_CONTENT(ID INTEGER\
+    PRIMARY KEY AUTOINCREMENT, HEADER TEXT, BODY TEXT);")
+
+
+def newEntry(header, body):
+        
+    val_str = "'{}', '{}'".format(header, body)
+
+    sql_str = "INSERT INTO WEBSITE_CONTENT (HEADER, BODY) VALUES ({});".format(val_str)
+    print (sql_str)
+
+    conn.execute(sql_str)
+    conn.commit()
+    return conn.total_changes
+
+
+
+def viewAll():
+    sql_str = "SELECT ID, HEADER, BODY from WEBSITE_CONTENT"
+    cursor = conn.execute(sql_str)
+    rows = cursor.fetchall()
+    
+
+def viewDBText():
+    sql_str = "SELECT HEADER from WEBSITE_CONTENT"
+    cursor = conn.execute(sql_str)
+    
+    loaded = cursor.fetchall()
+    return loaded
+    
+
+createTable()
+viewDBText()
+viewAll()
