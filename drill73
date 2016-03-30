@@ -71,14 +71,14 @@ class retailSite:
 
         self.frame_button = ttk.Frame(master)
         self.frame_button.pack()
-        ttk.Button(self.frame_button, text = 'Load Text', command = self.onClick).grid(pady = 10)
+        ttk.Button(self.frame_button, text = 'Load Text', command = self.load).grid(pady = 10)
 
         
         for item in drill73_db.viewDBText():
             self.lb.insert(END, item)
 
 
-    def onClick(self):
+    def load(self):
         selection = self.lb.get(ACTIVE)
         print (selection)
         self.clear()
