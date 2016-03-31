@@ -82,7 +82,11 @@ class retailSite:
         selection = self.lb.get(ACTIVE)
         print (selection)
         self.clear()
-        self.entry_htmlH1.insert(10, str(selection))
+        self.entry_htmlH1.insert(50, str(selection))
+        
+        for content in drill73_db1.fetchAllWebsiteContent():
+          self.text_htmlP.insert(END, content['header'])
+          self.text_htmlP.insert(END, content['body'])
         
     def save(self):
         self.h1Text = self.entry_htmlH1.get()
