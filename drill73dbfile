@@ -26,12 +26,23 @@ def viewAll():
     rows = cursor.fetchall()
     
 
-def viewDBText():
+def viewDbBody():
     sql_str = "SELECT HEADER from WEBSITE_CONTENT"
     cursor = conn.execute(sql_str)
+    result = []
+    for row in cursor:
+        result.append(row[0])
+    return (result)
+
     
-    loaded = cursor.fetchall()
-    return loaded
+def fetchAllWebsiteContent():
+    sql_str = "SELECT HEADER, BODY from WEBSITE_CONTENT"
+    cursor = conn.execute(sql_str)
+    # Convert matrix results to array of dictionary results
+    result = []
+    for row in cursor:
+      result.append({'header': row[0], 'body': row[1]})
+    print (result)
     
 
 createTable()
