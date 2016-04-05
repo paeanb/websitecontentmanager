@@ -5,7 +5,7 @@ from tkinter import ttk
 import webbrowser
 import sqlite3
 import os
-import drill73_db
+import drill73_db1
 
 #Python 3.5.1
 
@@ -42,11 +42,8 @@ class retailSite:
         ttk.Label(self.frame_content, text = 'Body:').grid(row = 2, column = 0, padx = 10, sticky = 'sw')
         
       
-        self.entry_htmlH1 = ttk.Entry(self.frame_content, width = 100, font = ('Arial', 10))
-        
-        
+        self.entry_htmlH1 = ttk.Entry(self.frame_content, width = 100, font = ('Arial', 10))    
         self.text_htmlP = Text(self.frame_content, width = 100, height = 10, font = ('Ariel', 10))
-
         self.entry_htmlH1.grid(row= 1, column = 0, columnspan= 4, padx = 10)
         self.text_htmlP.grid(row = 3, column = 0, columnspan= 4, padx = 10)
 
@@ -63,7 +60,7 @@ class retailSite:
 
         
         scroll = Scrollbar(self.frame_load, orient = VERTICAL)
-        self.lb = Listbox(self.frame_load, yscrollcommand=scroll.set, height = 6, width= 115)
+        self.lb = Listbox(self.frame_load, yscrollcommand=scroll.set, height = 6, width= 110)
         scroll.config(command= self.lb.yview)
         scroll.pack(side=RIGHT, fill=Y)
         self.lb.pack(side=LEFT, fill=BOTH, expand=1)
@@ -71,30 +68,39 @@ class retailSite:
 
         self.frame_button = ttk.Frame(master)
         self.frame_button.pack()
-        ttk.Button(self.frame_button, text = 'Load Text', command = self.load).grid(pady = 10)
+        ttk.Button(self.frame_button, text = 'Load Text', command = self.onLoad).grid(pady = 10)
 
-        
-        for item in drill73_db.viewDBText():
+   
+        for item in drill73_db1.viewDbHeader():
             self.lb.insert(END, item)
-
-
-    def load(self):
+            
+    
+        
+    #def whichSelected(self):
+        #return int(self.lb.curselection()[0])
+        #print (self.lb.curselection())
+    
+    def onLoad(self): #from listbox to header entry
         selection = self.lb.get(ACTIVE)
         print (selection)
         self.clear()
         self.entry_htmlH1.insert(50, str(selection))
-        
-        for content in drill73_db1.fetchAllWebsiteContent():
-          self.text_htmlP.insert(END, content['header'])
+        table = drill73_db1.fetchAllWebsiteContent()
+        print ('Here is the dictionary: ' + str(table))
+        for content in table:
           self.text_htmlP.insert(END, content['body'])
+        #header, body = body[whichSelected()]
+        #self.texthtmlP.insert(body)
+        #self.whichSelected()
         
     def save(self):
-        self.h1Text = self.entry_htmlH1.get()
-        self.pText = self.text_htmlP.get(1.0, 'end')
-        drill73_db.newEntry(self.h1Text, self.pText)
+        self.h1Text = self.entry_htmlH1.get() #gets content from header
+        self.pText = self.text_htmlP.get(1.0, 'end') #gets content from body
+        drill73_db1.newEntry(self.h1Text, self.pText)#saves header and body to DB
         messagebox.showinfo(title = "Success!", message = "Site Content Saved!")
         self.clear()
-        for item in drill73_db.viewDBText():
+        self.lb.delete(0,END)
+        for item in drill73_db1.viewDbHeader(): #refreshes listbox to include new saved content
             self.lb.insert(END, item)
                 
         
@@ -107,7 +113,7 @@ class retailSite:
         self.clear()
         messagebox.showinfo(title = "Success!", message = "Site Content Updated!")
 
-    def clear(self):
+    def clear(self): #clears header and body 
         self.entry_htmlH1.delete(0, 'end')
         self.text_htmlP.delete(1.0, 'end')
 
@@ -124,17 +130,11 @@ class retailSite:
         webbrowser.open(self.url, new = self.new)
 
 
-
-    
-       
-
-
-        
             
 def main():
     root = Tk()
     feedback = retailSite(root)
     root.mainloop()
-    drill73_db.createTable()
+    drill73_db1.createTable()
 
 if __name__ == "__main__": main()
