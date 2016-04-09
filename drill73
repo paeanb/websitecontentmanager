@@ -1,7 +1,8 @@
-#drill 72 creating a GUI to update website content
+ #drill 72 creating a GUI to update website content
 
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
 import webbrowser
 import sqlite3
 import os
@@ -30,8 +31,8 @@ class retailSite:
         self.frame_header.pack()
 
 
-        self.logo = PhotoImage(file = 'shoe.png')
-        ttk.Label(self.frame_header, image = self.logo).grid(row = 0, column = 0, rowspan = 2, padx = 40)
+        #self.logo = PhotoImage(file = 'shoe.png')
+        #ttk.Label(self.frame_header, image = self.logo).grid(row = 0, column = 0, rowspan = 2, padx = 40)
         ttk.Label(self.frame_header, text = "Retail Website Manager", style = 'Header.TLabel').grid(row = 0, column = 1, padx= 10)
         ttk.Label(self.frame_header, text = "Update your website's content").grid(row = 1, column = 1, sticky = 'n')
         
@@ -47,11 +48,10 @@ class retailSite:
         self.entry_htmlH1.grid(row= 1, column = 0, columnspan= 4, padx = 10)
         self.text_htmlP.grid(row = 3, column = 0, columnspan= 4, padx = 10)
 
-        ttk.Button(self.frame_content, text = 'Clear', command = self.clear).grid(row = 4, column = 0, pady= 10)
+        ttk.Button(self.frame_content, text = 'Delete', command = self.delete).grid(row = 4, column = 0, pady= 10)
         ttk.Button(self.frame_content, text = 'Save', command = self.save).grid(row = 4, column = 1, pady= 10)
         ttk.Button(self.frame_content, text = 'Submit', command = self.submit).grid(row = 4, column = 2, pady= 10)
         ttk.Button(self.frame_content, text = 'View Page', command = self.viewPage).grid(row = 4, column = 3, pady= 10)
-        
 
 
         self.frame_load = ttk.Frame(master)
@@ -60,62 +60,107 @@ class retailSite:
 
         
         scroll = Scrollbar(self.frame_load, orient = VERTICAL)
-        self.lb = Listbox(self.frame_load, yscrollcommand=scroll.set, height = 6, width= 110)
+        self.lb = Listbox(self.frame_load, exportselection=0, yscrollcommand=scroll.set, height = 6, width= 110)
         scroll.config(command= self.lb.yview)
         scroll.pack(side=RIGHT, fill=Y)
+        self.lb.bind('<<ListboxSelect>>', self.onSelect)
         self.lb.pack(side=LEFT, fill=BOTH, expand=1)
         
 
-        self.frame_button = ttk.Frame(master)
-        self.frame_button.pack()
-        ttk.Button(self.frame_button, text = 'Load Text', command = self.onLoad).grid(pady = 10)
+        #self.frame_button = ttk.Frame(master)
+        #self.frame_button.pack()
+        #ttk.Button(self.frame_button, text = 'Load', command = "").grid(pady = 10)
 
-   
-        for item in drill73_db1.viewDbHeader():
-            self.lb.insert(END, item)
-            
+
+        def onStartUp():
+            conn = sqlite3.connect('retailSite.db')
+            cursor = conn.execute("SELECT COUNT(*) FROM WEBSITE_CONTENT")
+            count = cursor.fetchone()[0]
+            i = 0
+            while i < count:
+                    cursor.execute("SELECT HEADER FROM WEBSITE_CONTENT")
+                    varList = cursor.fetchall()[i]
+                    for item in varList:
+                        self.lb.insert(0, str(item))
+                        i = i + 1
+            conn.close()
+
+        ###### Initialize the  Listbox ######
+        onStartUp()
+
     
-        
-    #def whichSelected(self):
-        #return int(self.lb.curselection()[0])
-        #print (self.lb.curselection())
-    
-    def onLoad(self): #from listbox to header entry
-        selection = self.lb.get(ACTIVE)
-        print (selection)
-        self.clear()
-        self.entry_htmlH1.insert(50, str(selection))
-        table = drill73_db1.fetchAllWebsiteContent()
-        print ('Here is the dictionary: ' + str(table))
-        for content in table:
-          self.text_htmlP.insert(END, content['body'])
-        #header, body = body[whichSelected()]
-        #self.texthtmlP.insert(body)
-        #self.whichSelected()
+    def onSelect(self, event):
+        varList = event.widget #ListBox widget
+        count = varList.size()
+        if count > 0:
+            index = varList.curselection() #Gets the cursor selection's index
+            value = varList.get(index) #Gets the cursor selected value
+            self.entry_htmlH1.delete(0, END)
+            self.entry_htmlH1.insert(0, value)
+            conn = sqlite3.connect('retailSite.db')
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT BODY FROM WEBSITE_CONTENT where HEADER = (?)", [value])
+                varBody = cursor.fetchall()[0]
+                for b in varBody:
+                    self.text_htmlP.delete(1.0, END)
+                    self.text_htmlP.insert(1.0, b)
+        else:
+            pass
         
     def save(self):
         self.h1Text = self.entry_htmlH1.get() #gets content from header
+        self.h1Text = self.h1Text.strip()
+        self.h1Text = self.h1Text.upper()
         self.pText = self.text_htmlP.get(1.0, 'end') #gets content from body
-        drill73_db1.newEntry(self.h1Text, self.pText)#saves header and body to DB
-        messagebox.showinfo(title = "Success!", message = "Site Content Saved!")
-        self.clear()
-        self.lb.delete(0,END)
-        for item in drill73_db1.viewDbHeader(): #refreshes listbox to include new saved content
-            self.lb.insert(END, item)
+        if (len(self.pText) > 1) and (len(self.h1Text) > 0):
+            drill73_db1.newEntry(self.h1Text, self.pText)#saves header and body to DB
+            messagebox.showinfo(title = "Success!", message = "Site Content Saved!")
+            self.entry_htmlH1.delete(0, END)
+            self.text_htmlP.delete(1.0, END)
+            self.lb.delete(0,END)
+            for item in drill73_db1.viewDbHeader(): #refreshes listbox to include new saved content
+                self.lb.insert(END, item)
+            self.lb.delete(0,END)
+            conn = sqlite3.connect('retailSite.db')
+            cursor = conn.execute("SELECT COUNT(*) FROM WEBSITE_CONTENT")
+            count = cursor.fetchone()[0]
+            i = 0
+            while i < count:
+                    cursor.execute("SELECT HEADER FROM WEBSITE_CONTENT")
+                    varList = cursor.fetchall()[i]
+                    for item in varList:
+                        self.lb.insert(0, str(item))
+                        i = i + 1
+            conn.close()
+        else:
+            messagebox.showerror("Missing Text Error","Please ensure that there is information in the Header and Body fields.")
                 
-        
-    def submit(self):
-        self.h1Text = self.entry_htmlH1.get()
-        
-        self.pText = self.text_htmlP.get(1.0, 'end')
-        
-        self.createHtml()
-        self.clear()
-        messagebox.showinfo(title = "Success!", message = "Site Content Updated!")
 
-    def clear(self): #clears header and body 
-        self.entry_htmlH1.delete(0, 'end')
-        self.text_htmlP.delete(1.0, 'end')
+    def delete(self):
+        varSel = self.lb.get(self.lb.curselection())
+        confirm = messagebox.askokcancel("Delete Confirmation", "'{}' will be permenantly deleted, are you sure?".format(varSel))
+        if confirm:
+            conn = sqlite3.connect('retailSite.db')
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM WEBSITE_CONTENT WHERE HEADER = '"+varSel+"'")
+            conn.commit()
+            self.entry_htmlH1.delete(0, 'end')
+            self.text_htmlP.delete(1.0, 'end')
+        else:
+            pass
+        self.lb.delete(0,END)
+        cursor = conn.execute("SELECT COUNT(*) FROM WEBSITE_CONTENT")
+        count = cursor.fetchone()[0]
+        i = 0
+        while i < count:
+                cursor.execute("SELECT HEADER FROM WEBSITE_CONTENT")
+                varList = cursor.fetchall()[i]
+                for item in varList:
+                    self.lb.insert(0, str(item))
+                    i = i + 1
+        conn.close()
 
     def createHtml(self):
         self.html = open('index.html', 'w')
@@ -129,8 +174,19 @@ class retailSite:
         self.url = 'index.html'
         webbrowser.open(self.url, new = self.new)
 
-
-            
+    def submit(self):
+        self.h1Text = self.entry_htmlH1.get()
+        
+        self.pText = self.text_htmlP.get(1.0, 'end')
+        
+        self.createHtml()
+        self.clear()
+        messagebox.showinfo(title = "Success!", message = "Site Content Updated!")
+          
+    def clear(self): #clears header and body 
+        self.entry_htmlH1.delete(0, 'end')
+        self.text_htmlP.delete(1.0, 'end')
+        
 def main():
     root = Tk()
     feedback = retailSite(root)
