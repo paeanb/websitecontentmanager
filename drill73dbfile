@@ -24,7 +24,15 @@ def viewAll():
     sql_str = "SELECT ID, HEADER, BODY from WEBSITE_CONTENT"
     cursor = conn.execute(sql_str)
     rows = cursor.fetchall()
-    
+    print (rows)
+
+def viewDbHeader():
+    sql_str = "SELECT HEADER from WEBSITE_CONTENT"
+    cursor = conn.execute(sql_str)
+    result = []
+    for row in cursor:
+        result.append(row[0])
+    return (result)
 
 def viewDbBody():
     sql_str = "SELECT HEADER from WEBSITE_CONTENT"
@@ -34,7 +42,6 @@ def viewDbBody():
         result.append(row[0])
     return (result)
 
-    
 def fetchAllWebsiteContent():
     sql_str = "SELECT HEADER, BODY from WEBSITE_CONTENT"
     cursor = conn.execute(sql_str)
@@ -42,9 +49,8 @@ def fetchAllWebsiteContent():
     result = []
     for row in cursor:
       result.append({'header': row[0], 'body': row[1]})
-    print (result)
-    
+    return (result)
 
 createTable()
-viewDBText()
-viewAll()
+viewDbHeader()
+#fetchAllWebsiteContent()
