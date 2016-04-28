@@ -1,2 +1,2 @@
 # websitecontentmanager
-Updating the html on a website using python
+Developed a program using Python from scratch that allows the user to update and publish an html file to the web. User can also edit and choose from previously written entries. 
